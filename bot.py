@@ -239,6 +239,9 @@ def handle_callback_query(call):
   # In[ ]:
 
 
-keep_alive()
+from keep_alive import keep_alive
 
-infinity_polling(timeout=10, long_polling_timeout=5)
+if __name__ == "__main__":
+    keep_alive()
+    bot.infinity_polling(timeout=10, long_polling_timeout=5)
+
