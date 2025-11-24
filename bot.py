@@ -29,7 +29,7 @@ btn3 = types.InlineKeyboardButton("❤️ اشترك في القناة للمز�
                                   callback_data='click')
 btn4 = types.InlineKeyboardButton(
     "💰  حمل تطبيق Aliexpress عبر الضغط هنا للحصول على مكافأة 5 دولار  💰",
-    url="https://a.aliexpress.com/_mtV0j3q")
+    url="https://s.click.aliexpress.com/e/_c3ffip2l")
 keyboardStart.add(btn1, btn2, btn3, btn4,)
 
 keyboard = types.InlineKeyboardMarkup(row_width=1)
@@ -45,18 +45,9 @@ keyboard.add(btn1, btn2, btn3)
 keyboard_games = types.InlineKeyboardMarkup(row_width=1)
 btn1 = types.InlineKeyboardButton(
     " ⭐️ صفحة مراجعة وجمع النقاط يوميا ⭐️",
-    url="https://s.click.aliexpress.com/e/_on0MwkF")
-btn2 = types.InlineKeyboardButton(
-    "⭐️ لعبة Merge boss ⭐️", url="https://s.click.aliexpress.com/e/_DlCyg5Z")
-btn3 = types.InlineKeyboardButton(
-    "⭐️ لعبة Fantastic Farm ⭐️",
-    url="https://s.click.aliexpress.com/e/_DBBkt9V")
-btn4 = types.InlineKeyboardButton(
-    "⭐️ لعبة قلب الاوراق Flip ⭐️",
-    url="https://s.click.aliexpress.com/e/_DdcXZ2r")
-btn5 = types.InlineKeyboardButton(
-    "⭐️ لعبة GoGo Match ⭐️", url="https://s.click.aliexpress.com/e/_DDs7W5D")
-keyboard_games.add(btn1, btn2, btn3, btn4, btn5)
+    url="https://s.click.aliexpress.com/e/_c4mL0CbT")
+
+keyboard_games.add(btn1)
 
 # In[4]:
 
@@ -79,7 +70,7 @@ def button_click(callback_query):
   #bot.send_message(callback_query.message.chat.id, "This is the message text.")
 
   text = "✅1-ادخل الى السلة من هنا:\n" \
-         " https://s.click.aliexpress.com/e/_opGCtMf \n" \
+         " https://s.click.aliexpress.com/e/_c4P3GuL3 \n" \
          "✅2-قم باختيار المنتجات التي تريد تخفيض سعرها\n" \
          "✅3-اضغط على زر دفع ليحولك لصفحة التأكيد \n" \
          "✅4-اضغط على الايقونة في الاعلى وانسخ الرابط  هنا في البوت لتتحصل على رابط التخفيض"
@@ -244,4 +235,5 @@ from keep_alive import keep_alive
 if __name__ == "__main__":
     keep_alive()
     bot.infinity_polling(timeout=10, long_polling_timeout=5)
+
 
