@@ -10,7 +10,7 @@ import urllib.parse
 from urllib.parse import urlparse, parse_qs
 
 # إعداد البوت وواجهة AliExpress
-BOT_TOKEN = "8378063186:AAEDwUoSYcnLqwvAxTFxlh7DQ8DUzooNAVA"
+BOT_TOKEN = "8378063186:AAFKfiZGnnEQhn-8xUr7baDK7aZcQmvEZwc"
 AE_APP_KEY = "521886"
 AE_APP_SECRET = "T9bjjGVVkxC5DAXJSfRJwKX2BdRXySSf"
 AE_TRACKING_ID = "default"
