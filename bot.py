@@ -14,9 +14,9 @@ from urllib.parse import urlparse, parse_qs
 
 # In[2]:
 
-bot = telebot.TeleBot('6613740819:AAEiGrOSCcuVNQTrzkhbJ4Bg29oBm6UU6nw')
+bot = telebot.TeleBot('8378063186:AAEDwUoSYcnLqwvAxTFxlh7DQ8DUzooNAVA')
   
-aliexpress = AliexpressApi('502336', 'qW3MlLGKtt7jnZOg8KkHpfCbTaac2LOq',
+aliexpress = AliexpressApi('521886', 'T9bjjGVVkxC5DAXJSfRJwKX2BdRXySSf',
                            models.Language.EN, models.Currency.EUR, 'default')
 # In[3]:
 
@@ -27,7 +27,7 @@ btn2 = types.InlineKeyboardButton("⭐️تخفيض العملات على منت
                                   callback_data='click')
 
 btn4 = types.InlineKeyboardButton("🎬 شاهد كيفية عمل البوت 🎬",
-                                  url="https://t.me/AliXPromotion/8")
+                                  url="https://t.me/best_coupons_ali_dz")
 btn5 = types.InlineKeyboardButton(
     "💰  حمل تطبيق Aliexpress عبر الضغط هنا للحصول على مكافأة 5 دولار  💰",
     url="https://a.aliexpress.com/_mtV0j3q")
@@ -39,7 +39,7 @@ btn1 = types.InlineKeyboardButton("⭐️ألعاب لجمع العملات ال
 btn2 = types.InlineKeyboardButton("⭐️تخفيض العملات على منتجات السلة 🛒⭐️",
                                   callback_data='click')
 btn3 = types.InlineKeyboardButton("❤️ اشترك في القناة للمزيد من العروض ❤️",
-                                  url="https://t.me/AliXPromotion")
+                                  url="https://t.me/best_coupons_ali_dz")
 
 keyboard.add(btn1, btn2, btn3)
 
