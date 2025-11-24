@@ -152,11 +152,12 @@ def extract_link(text):
   link_pattern = r'https?://\S+|www\.\S+'
 
   # Find all occurrences of the pattern in the text
+  link_pattern = r'https?://\S+|www\.\S+'
   links = re.findall(link_pattern)
 
   if links:
     return links[0]
-
+    return None
 
 def build_shopcart_link(link):
   params = get_url_params(link)
