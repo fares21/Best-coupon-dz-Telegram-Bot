@@ -1,16 +1,17 @@
 from flask import Flask
-from threading import Thread
+import threading
+import time
 
 app = Flask(__name__)
 
-@app.route("/")
+@app.route('/')
 def home():
-    return "I'm alive"
+    return "🤖 Bot is alive!"
 
-def run():
-    app.run(host="0.0.0.0", port=10000)
+def run_flask():
+    app.run(host='0.0.0.0', port=8080)  # استخدم port 8080 بدلاً من 10000
 
 def keep_alive():
-    t = Thread(target=run)
+    t = threading.Thread(target=run_flask)
     t.daemon = True
     t.start()
