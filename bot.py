@@ -8,14 +8,6 @@ import re
 import json
 import urllib.parse
 from urllib.parse import urlparse, parse_qs
-import requests
-import os
-import logging
-from flask import Flask, request
-
-# إعداد التسجيل
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 # إعداد البوت وواجهة AliExpress
 BOT_TOKEN = "8378063186:AAFKfiZGnnEQhn-8xUr7baDK7aZcQmvEZwc"
@@ -23,181 +15,130 @@ AE_APP_KEY = "521886"
 AE_APP_SECRET = "T9bjjGVVkxC5DAXJSfRJwKX2BdRXySSf"
 AE_TRACKING_ID = "default"
 
-# تهيئة البوت
 bot = telebot.TeleBot(BOT_TOKEN)
-app = Flask(__name__)
 
-# تهيئة AliExpress API
-try:
-    aliexpress = AliexpressApi(
-        AE_APP_KEY,
-        AE_APP_SECRET,
-        models.Language.EN,
-        models.Currency.EUR,
-        AE_TRACKING_ID
-    )
-    logger.info("✅ AliExpress API initialized successfully")
-except Exception as e:
-    logger.error(f"❌ Failed to initialize AliExpress API: {e}")
-    aliexpress = None
+aliexpress = AliexpressApi(
+    AE_APP_KEY,
+    AE_APP_SECRET,
+    models.Language.EN,
+    models.Currency.EUR,
+    AE_TRACKING_ID
+)
 
-# تخزين مؤقت لنتائج البحث
-user_searches = {}
+# لوحات الأزرار
+keyboardStart = types.InlineKeyboardMarkup(row_width=1)
+btn1 = types.InlineKeyboardButton("⭐️ألعاب لجمع العملات المعدنية⭐️", callback_data="games")
+btn2 = types.InlineKeyboardButton("⭐️تخفيض العملات على منتجات السلة 🛒⭐️", callback_data="click")
+btn3 = types.InlineKeyboardButton(
+    "❤️ اشترك في القناة للمزيد من العروض ❤️",
+    url="https://t.me/best_coupons_ali_dz"
+)
+btn4 = types.InlineKeyboardButton(
+    "💰  حمل تطبيق Aliexpress عبر الضغط هنا للحصول على مكافأة 5 دولار  💰",
+    url="https://s.click.aliexpress.com/e/_c3ffip2l"
+)
+keyboardStart.add(btn1, btn2, btn3, btn4)
 
-# لوحات الأزرار المحدثة
-def create_keyboards():
-    keyboardStart = types.InlineKeyboardMarkup(row_width=1)
-    btn1 = types.InlineKeyboardButton("🔍 بحث عن منتج", callback_data="search")
-    btn2 = types.InlineKeyboardButton("🔥 العروض الحارة", callback_data="hot_deals")
-    btn3 = types.InlineKeyboardButton(
-        "❤️ اشترك في القناة للمزيد من العروض ❤️",
-        url="https://t.me/best_coupons_ali_dz"
-    )
-    btn4 = types.InlineKeyboardButton(
-        "💰 حمل تطبيق Aliexpress للحصول على مكافأة 💰",
-        url="https://s.click.aliexpress.com/e/_c3ffip2l"
-    )
-    keyboardStart.add(btn1, btn2, btn3, btn4)
+keyboard = types.InlineKeyboardMarkup(row_width=1)
+btn1 = types.InlineKeyboardButton("⭐️ألعاب لجمع العملات المعدنية⭐️", callback_data="games")
+btn2 = types.InlineKeyboardButton("⭐️تخفيض العملات على منتجات السلة 🛒⭐️", callback_data="click")
+btn3 = types.InlineKeyboardButton(
+    "❤️ اشترك في القناة للمزيد من العروض ❤️",
+    url="https://t.me/best_coupons_ali_dz"
+)
+keyboard.add(btn1, btn2, btn3)
 
-    keyboard = types.InlineKeyboardMarkup(row_width=1)
-    btn1 = types.InlineKeyboardButton("🔍 بحث عن منتج", callback_data="search")
-    btn2 = types.InlineKeyboardButton("🔥 العروض الحارة", callback_data="hot_deals")
-    btn3 = types.InlineKeyboardButton(
-        "❤️ اشترك في القناة للمزيد من العروض ❤️",
-        url="https://t.me/best_coupons_ali_dz"
-    )
-    keyboard.add(btn1, btn2, btn3)
-    
-    return keyboardStart, keyboard
-
-keyboardStart, keyboard = create_keyboards()
+keyboard_games = types.InlineKeyboardMarkup(row_width=1)
+btn1 = types.InlineKeyboardButton(
+    " ⭐️ صفحة مراجعة وجمع النقاط يوميا ⭐️",
+    url="https://s.click.aliexpress.com/e/_c4mL0CbT"
+)
+keyboard_games.add(btn1)
 
 # /start
 @bot.message_handler(commands=["start"])
 def welcome_user(message):
-    welcome_text = """
-🤖 **مرحباً بك في بوت AliExpress للتسويق بالعمولة**
+    bot.send_message(
+        message.chat.id,
+        "مرحبا بك، ارسل لنا رابط المنتج الذي تريد شرائه لنوفر لك افضل سعر له 👌 \n",
+        reply_markup=keyboardStart
+    )
 
-🎯 **كيفية الاستخدام:**
-🔍 أرسل رابط منتج AliExpress مباشرة
-🔍 أو استخدم /search للبحث عن منتج
-🔥 أو استخدم /deals للعروض الخاصة
+# زر "تخفيض السلة"
+@bot.callback_query_handler(func=lambda call: call.data == "click")
+def button_click(callback_query):
+    bot.edit_message_text(
+        chat_id=callback_query.message.chat.id,
+        message_id=callback_query.message.message_id,
+        text="..."
+    )
 
-💡 **مميزات البوت:**
-✅ إنشاء روابط عمولة متعددة
-✅ أفضل العروض والتخفيضات
-✅ بحث متقدم عن المنتجات
-✅ دعم عربي كامل
+    text = (
+        "✅1-ادخل الى السلة من هنا:\n"
+        " https://s.click.aliexpress.com/e/_c4P3GuL3 \n"
+        "✅2-قم باختيار المنتجات التي تريد تخفيض سعرها\n"
+        "✅3-اضغط على زر دفع ليحولك لصفحة التأكيد \n"
+        "✅4-اضغط على الايقونة في الاعلى وانسخ الرابط هنا في البوت لتتحصل على رابط التخفيض"
+    )
 
-💰 **اربح عمولات على كل عملية شراء!**
-    """
-    
-    try:
-        bot.send_message(
-            message.chat.id,
-            welcome_text,
-            reply_markup=keyboardStart,
-            parse_mode='Markdown'
-        )
-        logger.info(f"✅ Sent welcome message to user {message.chat.id}")
-    except Exception as e:
-        logger.error(f"❌ Error sending welcome message: {e}")
+    img_link1 = "https://i.postimg.cc/HkMxWS1T/photo-5893070682508606111-y.jpg"
+    bot.send_photo(
+        callback_query.message.chat.id,
+        img_link1,
+        caption=text,
+        reply_markup=keyboard
+    )
 
-# معالجة الروابط المباشرة
+# روابط المنتج
 def get_affiliate_links(message, message_id, link):
     try:
-        if not aliexpress:
-            bot.edit_message_text(
-                "❌ خدمة API غير متاحة حالياً",
-                chat_id=message.chat.id,
-                message_id=message_id
-            )
-            return
-
-        # إنشاء روابط متعددة
-        promotion_links = aliexpress.get_affiliate_links([
-            link,
-            f"{link}?sourceType=561",
-            f"{link}?sourceType=620",
-            f"{link}?sourceType=580"
-        ])
+        # عرض محدود
+        limit_links = aliexpress.get_affiliate_links(
+            f"https://star.aliexpress.com/share/share.htm"
+            f"?platform=AE&businessType=ProductDetail&redirectUrl={link}?sourceType=561&aff_fcid="
+        )
+        limit_links = limit_links[0].promotion_link
 
         try:
-            products = aliexpress.get_products_details([link])
+            products = aliexpress.get_products_details([
+                f"https://star.aliexpress.com/share/share.htm"
+                f"?platform=AE&businessType=ProductDetail&redirectUrl={link}"
+            ])
+
             product = products[0]
-            
-            # بناء الرسالة بنفس التنسيق المطلوب
-            message_text = f"🛒 منتجك هو : 🔥 \n{product.product_title}  {getattr(product, 'target_discount', '0')}% 🛍\n\n"
-            
-            # إضافة الروابط المختلفة
-            link_names = [
-                "رابط تخفيض من صفحة العملات",
-                "رابط تخفيض BundleDeals", 
-                "رابط تخفيض آخر",
-                "رابط تخفيض Super Deals",
-                "رابط تخفيض Limited",
-                "رابط تخفيض Big Save"
-            ]
-            
-            for i, link_name in enumerate(link_names):
-                if i < len(promotion_links):
-                    promo_link = promotion_links[i].promotion_link
-                else:
-                    # رابط افتراضي
-                    promo_link = f"https://s.click.aliexpress.com/deep_link.htm?aff_id={AE_TRACKING_ID}&product_id={getattr(product, 'product_id', '')}"
-                
-                message_text += f"{link_name} :\n{promo_link}\n\n"
+            price_pro = product.target.sale_price
+            title_link = product.product_title
+            img_link = product.product_main_image_url
 
-            message_text += "تجد المنتج في يسار الصفحة 👈"
-            
             bot.delete_message(message.chat.id, message_id)
-            # حاول إرسال الصورة أولاً
-            try:
-                bot.send_photo(
-                    message.chat.id,
-                    product.product_main_image_url,
-                    caption=message_text,
-                    reply_markup=keyboard
-                )
-            except:
-                # إذا فشل إرسال الصورة، أرسل النص فقط
-                bot.send_message(
-                    message.chat.id,
-                    message_text,
-                    reply_markup=keyboard
-                )
-
-        except Exception as e:
-            # إذا فشل جلب تفاصيل المنتج، إرسال الروابط فقط
-            logger.error(f"Product details error: {e}")
-            bot.delete_message(message.chat.id, message_id)
-            message_text = "🛒 روابط التخفيضات للمنتج:\n\n"
-            
-            for i, promo_link in enumerate(promotion_links[:6]):
-                link_name = ["رابط تخفيض 1", "رابط تخفيض 2", "رابط تخفيض 3", "رابط تخفيض 4", "رابط تخفيض 5", "رابط تخفيض 6"][i]
-                message_text += f"{link_name} :\n{promo_link.promotion_link}\n\n"
-            
-            message_text += "تجد المنتج في يسار الصفحة 👈"
-            
-            bot.send_message(
+            bot.send_photo(
                 message.chat.id,
-                message_text,
+                img_link,
+                caption=(
+                    " \n🛒 منتجك هو  : 🔥 \n"
+                    f"{title_link} 🛍 \n"
+                    f"سعر المنتج  : {price_pro} دولار 💵\n"
+                    "\nقارن بين الاسعار واشتري 🔥 \n"
+                    "♨️ عرض محدود  : \n"
+                    f"{limit_links}\n\n"
+                    "#AliXPromotion ✅"
+                ),
                 reply_markup=keyboard
             )
 
-    except Exception as e:
-        logger.error(f"Affiliate links error: {e}")
-        try:
-            bot.edit_message_text(
-                "❌ حدث خطأ في معالجة الرابط، يرجى المحاولة لاحقاً",
-                chat_id=message.chat.id,
-                message_id=message_id
-            )
-        except:
+        except Exception:
+            bot.delete_message(message.chat.id, message_id)
             bot.send_message(
                 message.chat.id,
-                "❌ حدث خطأ في معالجة الرابط، يرجى المحاولة لاحقاً"
+                "قارن بين الاسعار واشتري 🔥 \n"
+                "♨️ عرض محدود : \n"
+                f"{limit_links}\n\n"
+                "#AliXPromotion ✅",
+                reply_markup=keyboard
             )
+
+    except Exception:
+        bot.send_message(message.chat.id, "حدث خطأ 🤷🏻‍♂️")
 
 # استخراج الرابط من نص الرسالة
 def extract_link(text):
@@ -207,105 +148,87 @@ def extract_link(text):
         return links[0]
     return None
 
+# بناء رابط السلة
+def build_shopcart_link(link):
+    params = get_url_params(link)
+    shop_cart_link = "https://www.aliexpress.com/p/trade/confirm.html?"
+    shop_cart_params = {
+        "availableProductShopcartIds": ",".join(params.get("availableProductShopcartIds", [])),
+        "extraParams": json.dumps(
+            {"channelInfo": {"sourceType": "620"}},
+            separators=(",", ":")
+        )
+    }
+    return create_query_string_url(link=shop_cart_link, params=shop_cart_params)
+
+def get_url_params(link):
+    parsed_url = urlparse(link)
+    params = parse_qs(parsed_url.query)
+    return params
+
+def create_query_string_url(link, params):
+    return link + urllib.parse.urlencode(params)
+
+# تخفيض السلة
+def get_affiliate_shopcart_link(link, message):
+    try:
+        shopcart_link = build_shopcart_link(link)
+        affiliate_link = aliexpress.get_affiliate_links(shopcart_link)[0].promotion_link
+
+        text2 = "هذا رابط تخفيض السلة \n" f"{affiliate_link}"
+
+        img_link3 = "https://i.postimg.cc/HkMxWS1T/photo-5893070682508606111-y.jpg"
+        bot.send_photo(message.chat.id, img_link3, caption=text2)
+
+    except Exception:
+        bot.send_message(message.chat.id, "حدث خطأ 🤷🏻‍♂️")
+
 # استقبال أي رسالة
 @bot.message_handler(func=lambda message: True)
 def get_link(message):
-    # تجاهل الأوامر
-    if message.text.startswith('/'):
-        return
-        
     link = extract_link(message.text)
 
-    if link and "aliexpress.com" in link.lower():
-        try:
-            sent_message = bot.send_message(
-                message.chat.id,
-                "🔄 جاري تجهيز روابط التخفيضات..."
-            )
-            get_affiliate_links(message, sent_message.message_id, link)
-        except Exception as e:
-            logger.error(f"Error processing link: {e}")
-            bot.reply_to(message, "❌ حدث خطأ في معالجة الرابط")
+    sent_message = bot.send_message(
+        message.chat.id,
+        "المرجو الانتظار قليلا، يتم تجهيز العروض ⏳"
+    )
+    message_id = sent_message.message_id
+
+    if link and "aliexpress.com" in link.lower() and "p/shoppingcart" not in message.text.lower():
+        if "availableProductShopcartIds" in message.text:
+            get_affiliate_shopcart_link(link, message)
+            return
+        get_affiliate_links(message, message_id, link)
     else:
-        bot.reply_to(
-            message,
-            "🔍 أرسل رابط منتج AliExpress مباشرة\n"
-            "أو استخدم /search للبحث عن منتج\n"
-            "أو /deals للعروض الخاصة",
-            reply_markup=keyboard
+        bot.delete_message(message.chat.id, message_id)
+        bot.send_message(
+            message.chat.id,
+            "الرابط غير صحيح ! تأكد من رابط المنتج أو اعد المحاولة.\n"
+            " قم بإرسال <b> الرابط فقط</b> بدون عنوان المنتج",
+            parse_mode="HTML"
         )
 
-# معالجة الأزرار الجديدة
+# زر الألعاب (أي callback آخر غير click)
 @bot.callback_query_handler(func=lambda call: True)
 def handle_callback_query(call):
-    try:
-        if call.data == "search":
-            msg = bot.send_message(
-                call.message.chat.id,
-                "🔍 أرسل رابط منتج AliExpress مباشرة\nأو استخدم /search للبحث"
-            )
-            
-        elif call.data == "hot_deals":
-            bot.send_message(
-                call.message.chat.id,
-                "🔥 أرسل رابط أي منتج للحصول على أفضل العروض!"
-            )
-            
-        bot.answer_callback_query(call.id, "✅")
-    except Exception as e:
-        logger.error(f"Callback error: {e}")
-        bot.answer_callback_query(call.id, "❌ حدث خطأ")
-
-# Webhook routes
-@app.route('/')
-def home():
-    return "🤖 Telegram Bot is running!"
-
-@app.route('/webhook/' + BOT_TOKEN, methods=['POST'])
-def webhook():
-    if request.headers.get('content-type') == 'application/json':
-        json_string = request.get_data().decode('utf-8')
-        update = telebot.types.Update.de_json(json_string)
-        bot.process_new_updates([update])
-        return ''
+    # لو داتا "games" أو أي شيء آخر غير "click"
+    if call.data == "games":
+        img_link2 = "https://i.postimg.cc/zvDbVTS0/photo-5893070682508606110-x.jpg"
+        bot.send_photo(
+            call.message.chat.id,
+            img_link2,
+            caption=(
+                "روابط ألعاب جمع العملات المعدنية لإستعمالها في خفض السعر لبعض المنتجات، "
+                "قم بالدخول يوميا لها للحصول على أكبر عدد ممكن في اليوم 👇"
+            ),
+            reply_markup=keyboard_games
+        )
     else:
-        return 'Invalid content type', 403
+        bot.answer_callback_query(call.id, "👍")
 
-@app.route('/set_webhook')
-def set_webhook():
-    # احصل على عنوان URL الخاص بخدمتك من Render
-    webhook_url = f"https://{os.environ.get('RENDER_SERVICE_NAME', 'your-service-name')}.onrender.com/webhook/{BOT_TOKEN}"
-    
-    try:
-        bot.remove_webhook()
-        time.sleep(1)
-        result = bot.set_webhook(url=webhook_url)
-        return f"✅ Webhook set successfully: {result}"
-    except Exception as e:
-        return f"❌ Error setting webhook: {e}"
-
-@app.route('/remove_webhook')
-def remove_webhook():
-    try:
-        result = bot.remove_webhook()
-        return f"✅ Webhook removed: {result}"
-    except Exception as e:
-        return f"❌ Error removing webhook: {e}"
+# تشغيل السيرفر الصغير + البوت
+from keep_alive import keep_alive
 
 if __name__ == "__main__":
-    logger.info("🚀 Starting Telegram Bot with Webhooks...")
-    
-    # على Render، استخدم المنفذ من متغير البيئة
-    port = int(os.environ.get("PORT", 8080))
-    
-    # في البيئة المحلية، يمكنك استخدام Polling للاختبار
-    if os.environ.get("RENDER"):
-        # على Render، استخدم Webhooks
-        app.run(host="0.0.0.0", port=port)
-    else:
-        # محلياً، استخدم Polling للاختبار
-        logger.info("🔄 Running in polling mode (local development)")
-        try:
-            bot.polling(skip_pending=True, timeout=10)
-        except Exception as e:
-            logger.error(f"❌ Polling error: {e}")
+    keep_alive()
+    bot.infinity_polling(timeout=10, long_polling_timeout=5)
