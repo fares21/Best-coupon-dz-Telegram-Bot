@@ -9,10 +9,9 @@ import json
 import urllib.parse
 from urllib.parse import urlparse, parse_qs
 import requests
-import time
 import os
-import sys
 import logging
+from flask import Flask, request
 
 # إعداد التسجيل
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -26,6 +25,7 @@ AE_TRACKING_ID = "default"
 
 # تهيئة البوت
 bot = telebot.TeleBot(BOT_TOKEN)
+app = Flask(__name__)
 
 # تهيئة AliExpress API
 try:
@@ -256,48 +256,56 @@ def handle_callback_query(call):
         logger.error(f"Callback error: {e}")
         bot.answer_callback_query(call.id, "❌ حدث خطأ")
 
-# تشغيل البوت مع معالجة الأخطاء
-def run_bot():
-    logger.info("🚀 Starting Telegram Bot...")
-    
-    max_retries = 5
-    retry_delay = 10
-    
-    for attempt in range(max_retries):
-        try:
-            logger.info(f"🔄 Attempt {attempt + 1} to start bot...")
-            
-            # استخدم polling بدلاً من infinity_polling مع skip_pending
-            bot.polling(
-                timeout=10,
-                long_polling_timeout=5,
-                skip_pending=True  # تجاهل الرسائل المعلقة
-            )
-            
-        except telebot.apihelper.ApiTelegramException as e:
-            if "Conflict" in str(e):
-                logger.error(f"❌ Another bot instance is running. Retrying in {retry_delay} seconds...")
-                time.sleep(retry_delay)
-                retry_delay *= 2  # زيادة وقت الانتظار
-            else:
-                logger.error(f"❌ Telegram API error: {e}")
-                break
-                
-        except Exception as e:
-            logger.error(f"❌ Unexpected error: {e}")
-            time.sleep(retry_delay)
-            
-    logger.error("❌ Failed to start bot after multiple attempts")
+# Webhook routes
+@app.route('/')
+def home():
+    return "🤖 Telegram Bot is running!"
 
-# تشغيل السيرفر الصغير
-try:
-    from keep_alive import keep_alive
-    keep_alive()
-    logger.info("✅ Keep-alive server started")
-except ImportError:
-    logger.warning("⚠️ Keep-alive module not found, running without web server")
-except Exception as e:
-    logger.error(f"❌ Error starting keep-alive: {e}")
+@app.route('/webhook/' + BOT_TOKEN, methods=['POST'])
+def webhook():
+    if request.headers.get('content-type') == 'application/json':
+        json_string = request.get_data().decode('utf-8')
+        update = telebot.types.Update.de_json(json_string)
+        bot.process_new_updates([update])
+        return ''
+    else:
+        return 'Invalid content type', 403
+
+@app.route('/set_webhook')
+def set_webhook():
+    # احصل على عنوان URL الخاص بخدمتك من Render
+    webhook_url = f"https://{os.environ.get('RENDER_SERVICE_NAME', 'your-service-name')}.onrender.com/webhook/{BOT_TOKEN}"
+    
+    try:
+        bot.remove_webhook()
+        time.sleep(1)
+        result = bot.set_webhook(url=webhook_url)
+        return f"✅ Webhook set successfully: {result}"
+    except Exception as e:
+        return f"❌ Error setting webhook: {e}"
+
+@app.route('/remove_webhook')
+def remove_webhook():
+    try:
+        result = bot.remove_webhook()
+        return f"✅ Webhook removed: {result}"
+    except Exception as e:
+        return f"❌ Error removing webhook: {e}"
 
 if __name__ == "__main__":
-    run_bot()
+    logger.info("🚀 Starting Telegram Bot with Webhooks...")
+    
+    # على Render، استخدم المنفذ من متغير البيئة
+    port = int(os.environ.get("PORT", 8080))
+    
+    # في البيئة المحلية، يمكنك استخدام Polling للاختبار
+    if os.environ.get("RENDER"):
+        # على Render، استخدم Webhooks
+        app.run(host="0.0.0.0", port=port)
+    else:
+        # محلياً، استخدم Polling للاختبار
+        logger.info("🔄 Running in polling mode (local development)")
+        try:
+            bot.polling(skip_pending=True, timeout=10)
+        except Exception as e:
+            logger.error(f"❌ Polling error: {e}")
